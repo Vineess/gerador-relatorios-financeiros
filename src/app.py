@@ -68,12 +68,12 @@ def gerar_relatorio_pdf(total_receitas, total_despesas, lucro_liquido, caminho_s
 
 # Função para salvar dados da planilha
 def salvar_dados(descricao, valor, tipo_pagamento, tipo, data):
+    import pandas as pd
     df = pd.read_csv(caminho_planilha)
-    novo_registro = {'Descrição': descricao, 'Valor': valor, 'Tipo de Pagamento': tipo_pagamento, 'Tipo': tipo, 'Data': data}
-    df = pd.concat([df, pd.DataFrame([novo_registro])], ignore_index=True)
+    novo_dado = pd.DataFrame([[descricao, valor, tipo_pagamento, tipo, data]], columns=df.columns)
+    df = pd.concat([df, novo_dado], ignore_index=True)
     df.to_csv(caminho_planilha, index=False)
-    print(f"Dados salvos: {novo_registro}")
-
+    messagebox.showinfo("Sucesso", "Dados salvos com sucesso!")
 
 # Função para gerar o relatório
 def gerar_relatorio():
@@ -92,65 +92,83 @@ def gerar_relatorio():
     print(f"Relatório gerado com sucesso em: {caminho_pdf}")
     messagebox.showinfo("Sucesso", f"Relatório gerado com sucesso!\n\n{caminho_pdf}")
 
+    
+
 
 # Interface gráfica com Tkinter
 def abrir_interface():
     root = tk.Tk()
     root.title("Gerador de Relatórios Financeiros")
 
-    # Campos de entrada
-    tk.Label(root, text="Descrição").grid(row=0, column=0)
-    descricao_entry = tk.Entry(root)
-    descricao_entry.grid(row=0, column=1)
+    # Tamanho fixo para a janela
+    root.geometry('500x500')  # Definindo o tamanho inicial da janela (largura x altura)
+    root.minsize(500, 500)  # Tamanho mínimo da janela
+    root.maxsize(500, 500)  # Tamanho máximo da janela
+    root.resizable(False, False)  # Impedindo o redimensionamento da janela
 
-    tk.Label(root, text="Valor").grid(row=1, column=0)
-    valor_entry = tk.Entry(root)
-    valor_entry.grid(row=1, column=1)
+    # Cores e tema
+    root.config(bg="#f0f0f0")  # Cor de fundo suave
+    cor_botao = "#4CAF50"  # Cor do botão de salvar
+    cor_botao_hover = "#45a049"  # Cor do botão quando em hover
+    cor_botao_gerar = "#2196F3"  # Cor do botão para gerar relatório
+    cor_botao_gerar_hover = "#1976D2"  # Cor do botão de gerar relatório quando em hover
 
-    tk.Label(root, text="Tipo de Pagamento").grid(row=2, column=0)
-    tipo_pagamento_entry = tk.Entry(root)
-    tipo_pagamento_entry.grid(row=2, column=1)
+    # Estilo de fontes
+    fonte_titulo = ("Arial", 14, "bold")
+    fonte_label = ("Arial", 12)
+    fonte_botao = ("Arial", 12, "bold")
 
-    tk.Label(root, text="Tipo (Receita/Despesa)").grid(row=3, column=0)
-    tipo_entry = tk.Entry(root)
-    tipo_entry.grid(row=3, column=1)
+    # Label para mostrar o nome da tabela
+    tabela_label = tk.Label(root, text="Tabela: planilha_financeira", font=fonte_titulo, bg="#f0f0f0")
+    tabela_label.grid(row=0, column=0, columnspan=2, pady=10)
 
-    tk.Label(root, text="Data (YYYY-MM-DD)").grid(row=4, column=0)
-    data_entry = tk.Entry(root)
-    data_entry.grid(row=4, column=1)
+    # Descrição
+    tk.Label(root, text="Descrição", font=fonte_label, bg="#f0f0f0").grid(row=1, column=0, pady=5, padx=10, sticky="w")
+    descricao_entry = tk.Entry(root, font=fonte_label, width=30)
+    descricao_entry.grid(row=1, column=1, pady=5)
 
-    # Função de salvar e limpar os campos
+    # Valor
+    tk.Label(root, text="Valor", font=fonte_label, bg="#f0f0f0").grid(row=2, column=0, pady=5, padx=10, sticky="w")
+    valor_entry = tk.Entry(root, font=fonte_label, width=30)
+    valor_entry.grid(row=2, column=1, pady=5)
+
+    # Tipo de Pagamento (usando OptionMenu)
+    tk.Label(root, text="Tipo de Pagamento", font=fonte_label, bg="#f0f0f0").grid(row=3, column=0, pady=5, padx=10, sticky="w")
+    tipo_pagamento_var = tk.StringVar()
+    tipo_pagamento_var.set("Dinheiro")  # Valor padrão
+    tipo_pagamento_menu = tk.OptionMenu(root, tipo_pagamento_var, "Dinheiro", "Pix", "Boleto", "Cartão")
+    tipo_pagamento_menu.grid(row=3, column=1, pady=5)
+
+    # Tipo (Receita/Despesa)
+    tk.Label(root, text="Tipo (Receita/Despesa)", font=fonte_label, bg="#f0f0f0").grid(row=4, column=0, pady=5, padx=10, sticky="w")
+    tipo_var = tk.StringVar()
+    tipo_var.set("Receita")  # Valor padrão
+    tipo_menu = tk.OptionMenu(root, tipo_var, "Receita", "Despesa")
+    tipo_menu.grid(row=4, column=1, pady=5)
+
+    # Data (no formato DD-MM-YYYY)
+    tk.Label(root, text="Data (DD-MM-YYYY)", font=fonte_label, bg="#f0f0f0").grid(row=5, column=0, pady=5, padx=10, sticky="w")
+    data_entry = tk.Entry(root, font=fonte_label, width=30)
+    data_entry.grid(row=5, column=1, pady=5)
+
+    # Função de salvar dados
     def on_salvar():
         descricao = descricao_entry.get()
         valor = float(valor_entry.get())
-        tipo_pagamento = tipo_pagamento_entry.get()
-        tipo = tipo_entry.get()
+        tipo_pagamento = tipo_pagamento_var.get()
+        tipo = tipo_var.get()
         data = data_entry.get()
-        
-        if descricao and valor and tipo_pagamento and tipo and data:
-            salvar_dados(descricao, valor, tipo_pagamento, tipo, data)
-            messagebox.showinfo("Sucesso", "Dados salvos com sucesso!")
-            
-            # Limpar os campos após salvar
-            descricao_entry.delete(0, tk.END)
-            valor_entry.delete(0, tk.END)
-            tipo_pagamento_entry.delete(0, tk.END)
-            tipo_entry.delete(0, tk.END)
-            data_entry.delete(0, tk.END)
-        else:
-            messagebox.showwarning("Atenção", "Todos os campos devem ser preenchidos!")
+        salvar_dados(descricao, valor, tipo_pagamento, tipo, data)
 
-    # Função de gerar relatório
-    def on_gerar_relatorio():
-        gerar_relatorio()
+    # Botão de salvar
+    salvar_button = tk.Button(root, text="Salvar", font=fonte_botao, bg=cor_botao, activebackground=cor_botao_hover, command=on_salvar)
+    salvar_button.grid(row=6, column=0, padx=10, pady=20)
 
-    # Botões
-    tk.Button(root, text="Salvar", command=on_salvar).grid(row=5, column=0)
-    tk.Button(root, text="Gerar Relatório", command=on_gerar_relatorio).grid(row=5, column=1)
+    # Botão para gerar relatório
+    gerar_button = tk.Button(root, text="Gerar Relatório", font=fonte_botao, bg=cor_botao_gerar, activebackground=cor_botao_gerar_hover, command=gerar_relatorio)
+    gerar_button.grid(row=6, column=1, padx=10, pady=20)
 
-    # Iniciar a interface gráfica
     root.mainloop()
 
-# Iniciar a interface
-if __name__ == "__main__":
-    abrir_interface()
+# Abrir a interface gráfica
+abrir_interface()
